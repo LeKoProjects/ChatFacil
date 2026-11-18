@@ -1,0 +1,127 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@source '../views';
+@source '../js';
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ | Identidade visual NEXO Chat (manual de papelaria):
+ |  - Azul-marinho  #0E2A63  (fundos institucionais, "NEXO")
+ |  - Azul NEXO     #1677F0  (cor primária, "Chat", ícone de balão)
+ |  - Azul claro    #3BA0FF  (ondas / destaques)
+ |  - Branco e cinza-azulado claro para superfícies
+ | Tipografia: Montserrat (títulos e marca) + Inter (texto).
+ */
+:root {
+    --radius: 0.75rem;
+    --brand-navy: #0e2a63;
+    --brand-navy-deep: #0a1f4a;
+    --brand-blue: #1677f0;
+    --brand-sky: #3ba0ff;
+
+    --background: #f3f6fb;
+    --foreground: #0e1f3d;
+    --card: #ffffff;
+    --card-foreground: #0e1f3d;
+    --popover: #ffffff;
+    --popover-foreground: #0e1f3d;
+    --primary: var(--brand-blue);
+    --primary-foreground: #ffffff;
+    --secondary: #e9eff9;
+    --secondary-foreground: #0e2a63;
+    --muted: #eef2f8;
+    --muted-foreground: #5b6b86;
+    --accent: #e3edfd;
+    --accent-foreground: #0e2a63;
+    --destructive: #dc2f45;
+    --success: #12a26b;
+    --warning: #f2a516;
+    --border: #dde5f1;
+    --input: #d3dded;
+    --ring: var(--brand-blue);
+    --sidebar: var(--brand-navy);
+    --sidebar-foreground: #b9c8e6;
+    --sidebar-active: #1b3d82;
+    --heading: var(--brand-navy);
+}
+
+.dark {
+    --background: #081632;
+    --foreground: #e8eefa;
+    --card: #0d1f45;
+    --card-foreground: #e8eefa;
+    --popover: #0d1f45;
+    --popover-foreground: #e8eefa;
+    --primary: #2f8bff;
+    --primary-foreground: #ffffff;
+    --secondary: #152c5c;
+    --secondary-foreground: #e8eefa;
+    --muted: #12264f;
+    --muted-foreground: #9aaccb;
+    --accent: #17336b;
+    --accent-foreground: #e8eefa;
+    --destructive: #ff5a6e;
+    --success: #2fd096;
+    --warning: #ffbf3c;
+    --border: #1d3768;
+    --input: #23417a;
+    --ring: #2f8bff;
+    --sidebar: #061229;
+    --sidebar-foreground: #93a8cf;
+    --sidebar-active: #14306a;
+    --heading: #ffffff;
+}
+
+@theme inline {
+    --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-display: 'Montserrat Variable', 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+    --color-brand-navy: var(--brand-navy);
+    --color-brand-navy-deep: var(--brand-navy-deep);
+    --color-brand-blue: var(--brand-blue);
+    --color-brand-sky: var(--brand-sky);
+    --color-heading: var(--heading);
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-success: var(--success);
+    --color-warning: var(--warning);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-active: var(--sidebar-active);
+}
+
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+    h1,
+    h2,
+    h3 {
+        @apply font-display text-heading;
+        letter-spacing: -0.01em;
+    }
+}
