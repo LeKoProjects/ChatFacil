@@ -74,6 +74,7 @@ Fila, conversas em andamento e finalizadas, dados do visitante e mensagens em te
 | [docs/ARQUITETURA.md](docs/ARQUITETURA.md) | Arquitetura e decisões técnicas |
 | [docs/STATUS.md](docs/STATUS.md) | O que já foi feito, o que falta e próximos passos |
 | [docs/ESPECIFICACAO.md](docs/ESPECIFICACAO.md) | Especificação completa do produto (fases 1 a 4) |
+| [docs/DEPLOY-AWS.md](docs/DEPLOY-AWS.md) | Deploy em produção na AWS (EC2 + Apache + Docker) |
 
 ## Requisitos
 
@@ -134,9 +135,16 @@ docker compose run --rm app ./vendor/bin/pest
 docker compose run --rm vite npx vue-tsc --noEmit
 ```
 
-## Produção (resumo)
+## Produção
 
-- `docker build --target prod`, `APP_ENV=production`, `APP_DEBUG=false`, HTTPS no Nginx/balanceador, `SESSION_SECURE_COOKIE=true`.
-- `VITE_REVERB_HOST` = domínio público, `VITE_REVERB_PORT=443`, `VITE_REVERB_SCHEME=https` (Nginx encaminha `/app` para o Reverb).
-- Rodar `php artisan migrate --force`, `config:cache`, `route:cache`, worker de fila e Reverb supervisionados.
-- `FILESYSTEM_DISK=s3` quando houver anexos (Fase 2).
+Imagem de produção (`Dockerfile`, alvos `prod` e `web`), `compose.prod.yaml` e scripts em `deploy/` (criar `.env`, deploy e backup). Passo a passo completo para AWS EC2 atrás do Apache: [docs/DEPLOY-AWS.md](docs/DEPLOY-AWS.md).
+
+```bash
+./deploy/setup-env.sh   # gera o .env com chaves e senhas aleatórias
+./deploy/deploy.sh      # build, migrations e sobe tudo em 127.0.0.1:8090
+docker compose -f compose.prod.yaml exec app php artisan nexo:admin voce@empresa.com.br
+```
+
+## Instalar em sites WordPress
+
+Cadastre o domínio do site no painel (**Sites**) e cole o script do widget no rodapé, pelo plugin **WPCode** (*Code Snippets → Header & Footer → Footer*) ou pelo `functions.php` de um tema filho (`add_action('wp_footer', …)`). Se o site usa plugin de cache (WP Rocket, Autoptimize, LiteSpeed), exclua `widget.js` da opção de combinar/minificar JS e limpe o cache.

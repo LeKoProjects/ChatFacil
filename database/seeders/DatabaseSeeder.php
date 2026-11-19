@@ -19,6 +19,12 @@ class DatabaseSeeder extends Seeder
 {
     public function run(RegisterCompany $registerCompany, SaveWebsite $saveWebsite, TenantContext $tenant): void
     {
+        if (app()->isProduction()) {
+            $this->command?->error('O seeder cria dados de demonstração (senha "password") e não roda em produção. Use: php artisan nexo:admin');
+
+            return;
+        }
+
         User::query()->firstOrCreate(['email' => 'admin@nexo.local'], [
             'name' => 'Administração NEXO',
             'password' => 'password',

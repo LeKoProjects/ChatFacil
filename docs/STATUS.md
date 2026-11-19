@@ -1,7 +1,7 @@
 # NEXO Chat — Status das demandas
 
 > Acompanhamento da [especificação](ESPECIFICACAO.md) (prompt de desenvolvimento).
-> **Atualizado em:** 17/11/2026 · **Fase atual:** Fase 1 (MVP) — núcleo funcional entregue e validado.
+> **Atualizado em:** 19/11/2026 · **Fase atual:** Fase 1 (MVP) — núcleo funcional entregue e validado.
 > Arquitetura em [ARQUITETURA.md](ARQUITETURA.md) · Instalação no [README](../README.md)
 
 Legenda: ✅ feito e verificado · 🟡 parcial · ⬜ não iniciado
@@ -99,6 +99,14 @@ Legenda: ✅ feito e verificado · 🟡 parcial · ⬜ não iniciado
 - ✅ **Auditoria da plataforma**: todas as ações administrativas, com filtros por empresa e por ação.
 - ✅ Admin NEXO é levado direto a `/nexo` e não acessa as telas de empresa; administradores e atendentes de empresas recebem 403 no `/nexo`. Consultas entre empresas acontecem só nesse painel, de forma explícita (`withoutScope`).
 - Login de demonstração: `admin@nexo.local` / `password`.
+
+### 3.2 Produção (AWS — chat.nexoti.com.br)
+- ✅ Imagens de produção: `prod` (PHP-FPM com código, dependências sem dev e front-end compilado; OPcache sem checagem de arquivos; caches do Laravel gerados ao iniciar) e `web` (Nginx com arquivos públicos).
+- ✅ `compose.prod.yaml`: app, web (só em `127.0.0.1:8090`), reverb, queue, postgres e redis com reinício automático, volumes persistentes e logs rotacionados; Postgres e Redis sem portas expostas.
+- ✅ `deploy/`: `setup-env.sh` (gera `.env` com chaves e senhas aleatórias), `deploy.sh` (pull, build, migrations, restart), `backup.sh` (pg_dump diário, 14 dias, cópia opcional para S3) e vhost do Apache com proxy de WebSocket.
+- ✅ `php artisan nexo:admin` para criar o administrador NEXO em produção; o seeder de demonstração se recusa a rodar com `APP_ENV=production`.
+- ✅ Testado localmente em modo produção: login, painel, widget e tempo real pelo proxy (conversa nova chegou ao atendente em 267 ms; resposta ao visitante em 365 ms).
+- ⬜ Executar no servidor seguindo [DEPLOY-AWS.md](DEPLOY-AWS.md) (DNS, Docker, Apache, Certbot). A camada Apache/HTTPS só pode ser validada lá.
 
 ### Problemas encontrados e corrigidos durante a validação
 - Job de broadcast perdia a relação `conversation` ao ser restaurado na fila sem contexto de empresa → corrigido + teste de regressão.

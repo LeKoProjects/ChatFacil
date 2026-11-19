@@ -8,3 +8,11 @@ storage/framework/sessions/*
 storage/framework/views/*
 public/hot
 tests
+docs/screenshots
+.github
+AGENTS.md
+CLAUDE.md
+compose.yaml
+compose.prod.yaml
+public/build
+public/storage

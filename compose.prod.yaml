@@ -1,0 +1,90 @@
+# NEXO Chat — produção (um servidor, atrás do Apache que já atende o GLPI).
+#
+#   docker compose -f compose.prod.yaml --env-file .env up -d --build
+#
+# Só o Nginx deste projeto escuta no servidor, e apenas em 127.0.0.1:8090:
+# o Apache recebe https://chat.nexoti.com.br e encaminha para cá (inclusive o
+# WebSocket do Reverb em /app). Postgres e Redis ficam só na rede interna.
+name: nexo-chat-prod
+
+# reverb e queue usam a mesma imagem do app (construída só uma vez, pelo app).
+x-php: &php
+  image: nexo-chat-app:prod
+  env_file: .env
+  restart: unless-stopped
+  volumes:
+    - storage:/var/www/html/storage
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  networks: [nexo]
+  logging: &logging
+    driver: json-file
+    options: { max-size: "10m", max-file: "5" }
+
+services:
+  app:
+    <<: *php
+    build:
+      context: .
+      target: prod
+    command: php-fpm
+
+  web:
+    build:
+      context: .
+      target: web
+    image: nexo-chat-web:prod
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${APP_PORT:-8090}:80"
+    depends_on: [app, reverb]
+    networks: [nexo]
+    logging: *logging
+
+  reverb:
+    <<: *php
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+
+  queue:
+    <<: *php
+    command: php artisan queue:work redis --tries=3 --sleep=1 --max-time=3600
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 5s
+      retries: 10
+    networks: [nexo]
+    logging: *logging
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy noeviction
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+    networks: [nexo]
+    logging: *logging
+
+volumes:
+  pgdata:
+  redisdata:
+  storage:
+
+networks:
+  nexo:
