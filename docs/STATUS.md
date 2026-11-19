@@ -1,8 +1,8 @@
 # NEXO Chat — Status das demandas
 
-> Acompanhamento do [writing-block.md](writing-block.md) (prompt de desenvolvimento).
+> Acompanhamento da [especificação](ESPECIFICACAO.md) (prompt de desenvolvimento).
 > **Atualizado em:** 17/11/2026 · **Fase atual:** Fase 1 (MVP) — núcleo funcional entregue e validado.
-> Código em [`nexo-chat/`](nexo-chat/) · Arquitetura em [`nexo-chat/docs/ARQUITETURA.md`](nexo-chat/docs/ARQUITETURA.md) · Instalação em [`nexo-chat/README.md`](nexo-chat/README.md)
+> Arquitetura em [ARQUITETURA.md](ARQUITETURA.md) · Instalação no [README](../README.md)
 
 Legenda: ✅ feito e verificado · 🟡 parcial · ⬜ não iniciado
 
