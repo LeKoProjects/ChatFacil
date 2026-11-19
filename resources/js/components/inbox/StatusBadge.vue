@@ -4,7 +4,7 @@ import type { ConversationStatus } from '@/types';
 
 defineProps<{ status: ConversationStatus; label: string }>();
 
-const variants = { waiting: 'warning', open: 'success', pending: 'secondary', closed: 'outline' } as const;
+const variants = { bot: 'default', waiting: 'warning', open: 'success', pending: 'secondary', closed: 'outline' } as const;
 </script>
 
 <template>

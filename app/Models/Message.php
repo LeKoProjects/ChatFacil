@@ -18,6 +18,7 @@ use Illuminate\Support\Str;
  * @property int|null $user_id
  * @property string|null $client_message_id
  * @property string $body
+ * @property array{options?: list<array{id: string, label: string}>}|null $meta
  * @property Carbon|null $read_at
  * @property Carbon $created_at
  * @property-read User|null $user
@@ -29,7 +30,7 @@ class Message extends Model
 
     protected $fillable = [
         'company_id', 'conversation_id', 'sender_type', 'user_id',
-        'client_message_id', 'body', 'delivered_at', 'read_at',
+        'client_message_id', 'body', 'meta', 'delivered_at', 'read_at',
     ];
 
     protected function casts(): array
@@ -38,6 +39,7 @@ class Message extends Model
             'sender_type' => MessageSender::class,
             'delivered_at' => 'datetime',
             'read_at' => 'datetime',
+            'meta' => 'array',
         ];
     }
 

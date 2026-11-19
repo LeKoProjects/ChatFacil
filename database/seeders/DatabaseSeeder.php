@@ -70,5 +70,7 @@ class DatabaseSeeder extends Seeder
                 $website->widgets()->firstOrFail()->forceFill(['public_key' => $demoKeys[$slug]])->save();
             });
         }
+
+        $this->call(ChatbotDemoSeeder::class);
     }
 }

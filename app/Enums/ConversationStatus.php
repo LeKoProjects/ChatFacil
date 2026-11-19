@@ -4,6 +4,7 @@ namespace App\Enums;
 
 enum ConversationStatus: string
 {
+    case Bot = 'bot';
     case Waiting = 'waiting';
     case Open = 'open';
     case Pending = 'pending';
@@ -12,6 +13,7 @@ enum ConversationStatus: string
     public function label(): string
     {
         return match ($this) {
+            self::Bot => 'Com o assistente',
             self::Waiting => 'Aguardando atendimento',
             self::Open => 'Em atendimento',
             self::Pending => 'Pendente',

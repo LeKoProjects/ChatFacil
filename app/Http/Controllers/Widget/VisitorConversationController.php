@@ -11,7 +11,9 @@ use App\Http\Requests\SendMessageRequest;
 use App\Http\Requests\Widget\StartConversationRequest;
 use App\Http\Resources\MessageResource;
 use App\Models\Conversation;
+use App\Models\Message;
 use App\Models\Visitor;
+use App\Services\Chatbot\BotEngine;
 use App\Support\Widget\WidgetConversationPayload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -46,7 +48,7 @@ class VisitorConversationController extends Controller
         return response()->json($payload->make($conversation), 201);
     }
 
-    public function sendMessage(SendMessageRequest $request, SendMessage $send): JsonResponse
+    public function sendMessage(SendMessageRequest $request, SendMessage $send, BotEngine $bot): JsonResponse
     {
         $conversation = $this->currentConversation($this->visitor($request));
 
@@ -59,9 +61,46 @@ class VisitorConversationController extends Controller
             $request->validated('client_message_id'),
         );
 
+        // Enquanto está com o chatbot, a mensagem digitada é respondida pela FAQ.
+        $replies = $message->wasRecentlyCreated ? $bot->handleText($conversation->refresh(), $message->body) : [];
+
         $message->load(['conversation.visitor', 'user']);
 
-        return response()->json(['message' => (new MessageResource($message))->resolve()], 201);
+        return response()->json([
+            'message' => (new MessageResource($message))->resolve(),
+            'replies' => $this->resources($replies),
+        ], 201);
+    }
+
+    /** O visitante clicou em uma opção do chatbot. Devolve as mensagens novas. */
+    public function selectOption(Request $request, BotEngine $bot, WidgetConversationPayload $payload): JsonResponse
+    {
+        $data = $request->validate([
+            'option' => ['required', 'string', 'max:80'],
+            'client_message_id' => ['required', 'uuid'],
+        ]);
+
+        $conversation = $this->currentConversation($this->visitor($request));
+
+        abort_if(! $conversation, 404, 'Nenhuma conversa ativa.');
+
+        $before = (int) $conversation->messages()->max('id');
+        $bot->select($conversation, $data['option'], $data['client_message_id']);
+
+        return response()->json($payload->make($conversation->refresh(), $before));
+    }
+
+    /**
+     * @param  list<Message>  $messages
+     * @return list<array<string, mixed>>
+     */
+    private function resources(array $messages): array
+    {
+        foreach ($messages as $m) {
+            $m->load(['conversation.visitor', 'user']);
+        }
+
+        return MessageResource::collection($messages)->resolve();
     }
 
     public function typing(Request $request): JsonResponse

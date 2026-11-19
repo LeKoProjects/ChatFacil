@@ -30,6 +30,9 @@ use Illuminate\Support\Str;
  * @property Carbon|null $assigned_at
  * @property Carbon|null $closed_at
  * @property Carbon $created_at
+ * @property list<string>|null $bot_trail
+ * @property string|null $handoff_tag
+ * @property int $bot_misses
  * @property-read Visitor $visitor
  * @property-read Widget $widget
  * @property-read User|null $assignee
@@ -43,6 +46,7 @@ class Conversation extends Model
         'company_id', 'widget_id', 'visitor_id', 'assigned_user_id', 'status', 'priority',
         'origin_url', 'last_message_at', 'first_response_at', 'assigned_at', 'closed_at',
         'closed_by_user_id', 'visitor_unread_count', 'agent_unread_count',
+        'bot_trail', 'handoff_tag', 'bot_misses',
     ];
 
     protected function casts(): array
@@ -53,6 +57,7 @@ class Conversation extends Model
             'first_response_at' => 'datetime',
             'assigned_at' => 'datetime',
             'closed_at' => 'datetime',
+            'bot_trail' => 'array',
         ];
     }
 
@@ -109,6 +114,11 @@ class Conversation extends Model
     public function assignments(): HasMany
     {
         return $this->hasMany(ConversationAssignment::class);
+    }
+
+    public function isWithBot(): bool
+    {
+        return $this->status === ConversationStatus::Bot;
     }
 
     public function isClosed(): bool

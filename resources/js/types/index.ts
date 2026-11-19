@@ -1,7 +1,13 @@
 export type UserRole = 'platform_admin' | 'company_admin' | 'agent';
 export type Availability = 'online' | 'busy' | 'away' | 'offline';
-export type ConversationStatus = 'waiting' | 'open' | 'pending' | 'closed';
-export type SenderType = 'visitor' | 'agent' | 'system';
+export type ConversationStatus = 'bot' | 'waiting' | 'open' | 'pending' | 'closed';
+export type SenderType = 'visitor' | 'agent' | 'system' | 'bot';
+
+/** Opção clicável de uma mensagem do chatbot. */
+export interface BotOption {
+    id: string;
+    label: string;
+}
 
 export interface AuthUser {
     id: number;
@@ -35,6 +41,8 @@ export interface Message {
     sender_type: SenderType;
     author_name: string;
     body: string;
+    /** opções clicáveis (mensagens do chatbot) */
+    options?: BotOption[];
     client_message_id: string | null;
     created_at: string;
     read_at: string | null;
@@ -54,6 +62,10 @@ export interface ConversationSummary {
     last_message_at: string | null;
     first_response_at: string | null;
     closed_at: string | null;
+    /** caminho percorrido no menu do chatbot */
+    bot_trail: string[];
+    /** setor escolhido no chatbot ao pedir atendimento */
+    handoff_tag: string | null;
     visitor: {
         id: string;
         name: string;

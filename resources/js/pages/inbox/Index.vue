@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, usePage } from '@inertiajs/vue3';
-import { ExternalLink, Inbox, Lock, LockOpen, Search, Send, UserCheck, Wifi, WifiOff } from 'lucide-vue-next';
+import { Bot, ExternalLink, Inbox, Lock, LockOpen, Search, Send, UserCheck, Wifi, WifiOff } from 'lucide-vue-next';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
@@ -22,7 +22,7 @@ const props = defineProps<{
     filter: string;
     search: string;
     conversations: ConversationSummary[];
-    counts: { waiting: number; mine: number; open: number };
+    counts: { waiting: number; mine: number; open: number; bot: number };
     selected: ConversationSummary | null;
     messages: Message[];
     history: { id: string; status: string; status_label: string; created_at: string }[];
@@ -53,6 +53,7 @@ const filters = computed(() => [
     { key: 'waiting', label: `Fila (${counts.value.waiting})` },
     { key: 'mine', label: `Minhas (${counts.value.mine})` },
     { key: 'open', label: `Em atendimento (${counts.value.open})` },
+    { key: 'bot', label: `Com o bot (${counts.value.bot})` },
     { key: 'closed', label: 'Finalizadas' },
     { key: 'all', label: 'Todas' },
 ]);
@@ -196,12 +197,18 @@ function assignTo(event: Event) {
 }
 
 // ---- Tempo real ----
+/** Conversas com o chatbot só aparecem nos filtros "Com o bot" e "Todas" (ou se estiverem abertas na tela). */
+function belongsToFilter(c: ConversationSummary): boolean {
+    return c.status !== 'bot' || ['bot', 'all'].includes(props.filter) || selected.value?.id === c.id;
+}
+
 function upsert(c: ConversationSummary) {
+    if (!belongsToFilter(c) && !list.value.some((x) => x.id === c.id)) return;
     const idx = list.value.findIndex((x) => x.id === c.id);
     if (idx >= 0) list.value.splice(idx, 1, { ...list.value[idx], ...c });
     else list.value.unshift(c);
     list.value.sort((a, b) => {
-        const order = { waiting: 0, open: 1, pending: 2, closed: 3 };
+        const order = { waiting: 0, open: 1, pending: 2, bot: 3, closed: 4 };
         return order[a.status] - order[b.status] || (b.last_message_at ?? '').localeCompare(a.last_message_at ?? '');
     });
 }
@@ -214,15 +221,22 @@ const { connected } = useInboxRealtime(page.props.reverb, me.value.company!.id, 
             conversation = { ...conversation, agent_unread_count: 0 };
             if (message.sender_type === 'visitor') visitorTyping.value = false;
             scrollToBottom();
-        } else if (message.sender_type === 'visitor') {
+        } else if (message.sender_type === 'visitor' && conversation.status !== 'bot') {
             notify(`${conversation.visitor.name}: ${message.body}`);
         }
         upsert(conversation);
     },
     onConversation(conversation, reason) {
-        if (reason === 'created') {
+        if (reason === 'created' && conversation.status === 'bot') {
+            counts.value.bot++;
+        } else if (reason === 'created') {
             counts.value.waiting++;
             notify(`Nova conversa de ${conversation.visitor.name}`);
+        }
+        if (reason === 'handoff') {
+            counts.value.bot = Math.max(0, counts.value.bot - 1);
+            counts.value.waiting++;
+            notify(`${conversation.visitor.name} pediu atendimento${conversation.handoff_tag ? ` (${conversation.handoff_tag})` : ''}`);
         }
         if (selected.value?.id === conversation.id) {
             // conversa aberta na tela: nada fica "não lido" para o atendente
@@ -302,7 +316,7 @@ onBeforeUnmount(() => {
                                 <span class="ml-auto shrink-0 text-[11px] text-muted-foreground">{{ formatTime(c.last_message_at ?? c.created_at) }}</span>
                             </div>
                             <p class="truncate text-xs text-muted-foreground">
-                                <span v-if="c.last_message?.sender_type === 'agent'">Você: </span>{{ c.last_message?.body ?? '—' }}
+                                <span v-if="c.last_message?.sender_type === 'agent'">Você: </span><span v-else-if="c.last_message?.sender_type === 'bot'">Bot: </span>{{ c.last_message?.body ?? '—' }}
                             </p>
                             <div class="mt-1.5 flex items-center gap-2">
                                 <StatusBadge :status="c.status" :label="c.status_label" />
@@ -310,6 +324,7 @@ onBeforeUnmount(() => {
                                     espera {{ relativeFrom(c.created_at, now) }}
                                 </span>
                                 <span v-else-if="c.assignee" class="truncate text-[11px] text-muted-foreground">{{ c.assignee.name }}</span>
+                                <span v-if="c.handoff_tag && c.status === 'waiting'" class="truncate text-[11px] text-muted-foreground">· {{ c.handoff_tag }}</span>
                                 <span v-if="c.agent_unread_count > 0" class="ml-auto rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
                                     {{ c.agent_unread_count }}
                                 </span>
@@ -333,7 +348,7 @@ onBeforeUnmount(() => {
                         <div class="min-w-0">
                             <p class="truncate text-sm font-semibold">{{ selected.visitor.name }}</p>
                             <p class="truncate text-xs text-muted-foreground">
-                                {{ visitorTyping ? 'digitando…' : selected.assignee ? `Com ${selected.assignee.name}` : 'Sem responsável' }}
+                                {{ visitorTyping ? 'digitando…' : selected.assignee ? `Com ${selected.assignee.name}` : selected.status === 'bot' ? 'Com o chatbot' : 'Sem responsável' }}
                             </p>
                         </div>
                         <div class="ml-auto flex items-center gap-2">
@@ -352,6 +367,9 @@ onBeforeUnmount(() => {
                     </div>
 
                     <div class="shrink-0 border-t bg-card p-3">
+                        <p v-if="selected.status === 'bot'" class="mb-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Bot class="size-3.5" /> O chatbot está conduzindo esta conversa. Ao responder ou assumir, você passa a atender.
+                        </p>
                         <p v-if="selected.status === 'closed'" class="text-center text-sm text-muted-foreground">Conversa finalizada. Reabra para responder.</p>
                         <p v-else-if="!canReply" class="text-center text-sm text-muted-foreground">Esta conversa está com {{ selected.assignee?.name }}.</p>
                         <form v-else class="flex items-end gap-2" @submit.prevent="send">
@@ -394,6 +412,20 @@ onBeforeUnmount(() => {
                                 {{ selected.origin_url }} <ExternalLink class="size-3 shrink-0" />
                             </a>
                             <span v-else>—</span>
+                        </dd>
+                    </div>
+                    <div v-if="selected.handoff_tag">
+                        <dt class="text-xs text-muted-foreground">Setor escolhido</dt>
+                        <dd>{{ selected.handoff_tag }}</dd>
+                    </div>
+                    <div v-if="selected.bot_trail?.length">
+                        <dt class="text-xs text-muted-foreground">Caminho no chatbot</dt>
+                        <dd>
+                            <ol class="mt-1 space-y-1">
+                                <li v-for="(step, i) in selected.bot_trail" :key="i" class="flex gap-1.5 text-xs">
+                                    <span class="text-muted-foreground tabular-nums">{{ i + 1 }}.</span> {{ step }}
+                                </li>
+                            </ol>
                         </dd>
                     </div>
                     <div>

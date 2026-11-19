@@ -20,7 +20,7 @@ use Inertia\Response;
  */
 class InboxController extends Controller
 {
-    private const FILTERS = ['waiting', 'mine', 'open', 'closed', 'all'];
+    private const FILTERS = ['waiting', 'mine', 'open', 'bot', 'closed', 'all'];
 
     public function index(Request $request, ?Conversation $conversation = null): Response
     {
@@ -43,7 +43,7 @@ class InboxController extends Controller
                     ->orWhere('email', 'ilike', $like)
                     ->orWhere('phone', 'ilike', $like));
             })
-            ->orderByRaw("CASE status WHEN 'waiting' THEN 0 WHEN 'open' THEN 1 WHEN 'pending' THEN 2 ELSE 3 END")
+            ->orderByRaw("CASE status WHEN 'waiting' THEN 0 WHEN 'open' THEN 1 WHEN 'pending' THEN 2 WHEN 'bot' THEN 3 ELSE 4 END")
             ->orderByDesc('last_message_at')
             ->limit(100)
             ->get();
@@ -52,6 +52,7 @@ class InboxController extends Controller
             ->selectRaw("count(*) filter (where status = 'waiting') as waiting")
             ->selectRaw("count(*) filter (where status in ('open','pending') and assigned_user_id = ?) as mine", [$user->id])
             ->selectRaw("count(*) filter (where status in ('open','pending')) as open")
+            ->selectRaw("count(*) filter (where status = 'bot') as bot")
             ->first();
 
         $selected = null;
@@ -96,6 +97,7 @@ class InboxController extends Controller
                 'waiting' => (int) $counts?->waiting,
                 'mine' => (int) $counts?->mine,
                 'open' => (int) $counts?->open,
+                'bot' => (int) $counts?->bot,
             ],
             'selected' => $selected,
             'messages' => $messages,
@@ -115,6 +117,7 @@ class InboxController extends Controller
             'waiting' => $query->where('status', ConversationStatus::Waiting->value),
             'mine' => $query->where('assigned_user_id', $user->id)->active(),
             'open' => $query->whereIn('status', [ConversationStatus::Open->value, ConversationStatus::Pending->value]),
+            'bot' => $query->where('status', ConversationStatus::Bot->value),
             'closed' => $query->where('status', ConversationStatus::Closed->value),
             'all' => null,
             default => $query->where(fn (Builder $q) => $q

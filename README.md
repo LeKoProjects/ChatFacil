@@ -51,6 +51,8 @@ Fila, conversas em andamento e finalizadas, dados do visitante e mensagens em te
 |---|---|
 | ![Atendentes](docs/screenshots/06-atendentes.png) | ![Login](docs/screenshots/01-login.png) |
 
+**Chatbot de autoatendimento (sem IA):** a empresa monta um menu de botões (submenus, respostas prontas, transferência para um setor) e uma lista de perguntas frequentes. O bot atende antes da equipe e transfere a conversa com o caminho que o visitante percorreu.
+
 ### Painel central NEXO
 
 | Visão geral | Empresas |
@@ -65,7 +67,8 @@ Fila, conversas em andamento e finalizadas, dados do visitante e mensagens em te
 - **Multiempresa seguro:** escopo global por `company_id` que falha fechado sem contexto e bloqueia gravação em outra empresa; testes de isolamento.
 - **Widget isolado:** carregado num iframe, só funciona nos domínios autorizados (validação no servidor e CSP `frame-ancestors`), visitante identificado por token aleatório guardado só como hash.
 - **Mensagens confiáveis:** sem duplicadas (id do cliente + índice único), ordem garantida por sequência e recuperação do que foi perdido ao reconectar.
-- **Testes:** 43 testes Pest (fluxo do widget, atendimento, isolamento entre empresas, autorização dos canais, painéis) num banco separado que nunca toca o de desenvolvimento.
+- **Chatbot sem custo por mensagem:** menu em árvore + busca na FAQ com a busca textual do PostgreSQL (português, sem acentos); o atendente assume a qualquer momento.
+- **Testes:** 55 testes Pest (fluxo do widget, chatbot, atendimento, isolamento entre empresas, autorização dos canais, painéis) num banco separado que nunca toca o de desenvolvimento.
 
 ## Documentação
 

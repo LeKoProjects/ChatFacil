@@ -4,6 +4,7 @@ use App\Http\Controllers\Agent\AvailabilityController;
 use App\Http\Controllers\Agent\ConversationActionController;
 use App\Http\Controllers\Agent\InboxController;
 use App\Http\Controllers\Company\AgentController;
+use App\Http\Controllers\Company\ChatbotController;
 use App\Http\Controllers\Company\DashboardController;
 use App\Http\Controllers\Company\WebsiteController;
 use App\Http\Controllers\Platform\AuditLogController;
@@ -65,5 +66,18 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('agents', [AgentController::class, 'store'])->name('agents.store');
         Route::put('agents/{agent}', [AgentController::class, 'update'])->name('agents.update');
         Route::delete('agents/{agent}', [AgentController::class, 'destroy'])->name('agents.destroy');
+
+        Route::prefix('chatbot')->name('chatbot.')->controller(ChatbotController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::put('/', 'update')->name('update');
+            Route::post('nodes', 'storeNode')->name('nodes.store');
+            Route::put('nodes/{botNode}', 'updateNode')->name('nodes.update');
+            Route::delete('nodes/{botNode}', 'destroyNode')->name('nodes.destroy');
+            Route::post('nodes/{botNode}/move', 'moveNode')->name('nodes.move');
+            Route::post('faqs', 'storeFaq')->name('faqs.store');
+            Route::put('faqs/{faqEntry}', 'updateFaq')->name('faqs.update');
+            Route::delete('faqs/{faqEntry}', 'destroyFaq')->name('faqs.destroy');
+            Route::get('faqs/search', 'searchFaq')->name('faqs.search');
+        });
     });
 });

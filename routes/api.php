@@ -18,6 +18,7 @@ Route::prefix('widget')->name('widget.api.')->group(function () {
         Route::get('conversation', [VisitorConversationController::class, 'show'])->name('conversation.show');
         Route::post('conversation', [VisitorConversationController::class, 'store'])->name('conversation.store');
         Route::post('conversation/messages', [VisitorConversationController::class, 'sendMessage'])->name('conversation.messages');
+        Route::post('conversation/options', [VisitorConversationController::class, 'selectOption'])->name('conversation.options');
         Route::post('conversation/typing', [VisitorConversationController::class, 'typing'])->name('conversation.typing');
         Route::post('conversation/read', [VisitorConversationController::class, 'markRead'])->name('conversation.read');
         Route::post('broadcasting/auth', [VisitorConversationController::class, 'broadcastingAuth'])->name('broadcasting.auth');

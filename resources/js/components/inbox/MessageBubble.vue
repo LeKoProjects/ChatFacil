@@ -19,11 +19,15 @@ defineEmits<{ retry: [message: Message] }>();
                 cn(
                     'max-w-[75%] rounded-2xl px-4 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words shadow-xs',
                     mine ? 'rounded-br-sm bg-primary text-primary-foreground' : 'rounded-bl-sm border bg-card',
+                    message.sender_type === 'bot' && 'border-dashed bg-muted/60',
                     message.pending && 'opacity-70',
                 )
             "
         >
             {{ message.body }}
+        </div>
+        <div v-if="message.options?.length" class="flex max-w-[75%] flex-wrap gap-1" aria-label="Opções mostradas ao visitante">
+            <span v-for="o in message.options" :key="o.id" class="rounded-full border px-2 py-0.5 text-[11px] text-muted-foreground">{{ o.label }}</span>
         </div>
         <span class="flex items-center gap-1 px-1 text-[11px] text-muted-foreground">
             {{ formatTime(message.created_at) }}

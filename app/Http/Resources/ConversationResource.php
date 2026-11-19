@@ -31,6 +31,8 @@ class ConversationResource extends JsonResource
             'last_message_at' => $this->last_message_at?->toIso8601String(),
             'first_response_at' => $this->first_response_at?->toIso8601String(),
             'closed_at' => $this->closed_at?->toIso8601String(),
+            'bot_trail' => $this->bot_trail ?? [],
+            'handoff_tag' => $this->handoff_tag,
             'visitor' => [
                 'id' => $this->visitor->uuid,
                 'name' => $this->visitor->displayName(),

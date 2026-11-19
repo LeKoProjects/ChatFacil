@@ -78,8 +78,14 @@ export class WidgetApi {
         return this.request('POST', '/conversation', input);
     }
 
-    sendMessage(body: string, clientMessageId: string): Promise<{ message: Message }> {
+    /** `replies`: respostas imediatas do chatbot (também chegam pelo WebSocket). */
+    sendMessage(body: string, clientMessageId: string): Promise<{ message: Message; replies?: Message[] }> {
         return this.request('POST', '/conversation/messages', { body, client_message_id: clientMessageId });
+    }
+
+    /** Clique em uma opção do chatbot; devolve as mensagens novas. */
+    selectOption(option: string, clientMessageId: string): Promise<ConversationPayload> {
+        return this.request('POST', '/conversation/options', { option, client_message_id: clientMessageId });
     }
 
     typing(typing: boolean): Promise<unknown> {

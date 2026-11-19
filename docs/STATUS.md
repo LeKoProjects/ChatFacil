@@ -17,7 +17,7 @@ Legenda: ✅ feito e verificado · 🟡 parcial · ⬜ não iniciado
 | Fase 2 — Operação profissional | ⬜ |
 | Fase 3 — Gestão SaaS | 🟡 painel NEXO iniciado (empresas, suspensão, auditoria, indicadores); faltam planos, assinaturas e limites |
 | Fase 4 — Expansão | ⬜ |
-| Testes automatizados (backend) | ✅ 43 testes / 362 asserções passando (Pest + PostgreSQL) |
+| Testes automatizados (backend) | ✅ 55 testes / 462 asserções passando (Pest + PostgreSQL) |
 | Desempenho em desenvolvimento | ✅ ~0,14 s por requisição; entrega em tempo real < 0,4 s |
 | Checagem de tipos (frontend) | ✅ `vue-tsc` sem erros · build Vite OK |
 | Teste ponta a ponta manual | ✅ widget → central → resposta → encerramento, em tempo real (navegador) |
@@ -107,6 +107,16 @@ Legenda: ✅ feito e verificado · 🟡 parcial · ⬜ não iniciado
 - ✅ `php artisan nexo:admin` para criar o administrador NEXO em produção; o seeder de demonstração se recusa a rodar com `APP_ENV=production`.
 - ✅ Testado localmente em modo produção: login, painel, widget e tempo real pelo proxy (conversa nova chegou ao atendente em 267 ms; resposta ao visitante em 365 ms).
 - ⬜ Executar no servidor seguindo [DEPLOY-AWS.md](DEPLOY-AWS.md) (DNS, Docker, Apache, Certbot). A camada Apache/HTTPS só pode ser validada lá.
+
+### 3.3 Chatbot de autoatendimento (sem IA)
+- ✅ **Menu em árvore** configurável pela empresa (`/chatbot`): submenus, respostas prontas e "transferir para atendente" com setor; até 4 níveis e 100 opções; reordenar, editar e remover.
+- ✅ **Perguntas frequentes**: o que o visitante digita é buscado na FAQ com a busca textual do PostgreSQL (português, sem acentos, por prefixo; pergunta e palavras-chave pesam mais). O bot sugere até 3 perguntas como botões. Tela com "Testar busca".
+- ✅ **Fluxo**: com o chatbot ligado, a conversa nova começa com status `bot` (fora da fila). O visitante sai do bot ao clicar "Falar com um atendente", ao escolher uma opção de transferência ou depois de 2 mensagens sem resposta na FAQ. "Isso resolveu" encerra a conversa.
+- ✅ **Segurança do fluxo**: só as opções da última mensagem do bot são aceitas; clique repetido (mesmo `client_message_id`) não duplica; o bot para assim que um atendente assume ou responde.
+- ✅ **Central**: filtro "Com o bot", aviso quando a conversa está com o bot, setor escolhido e caminho percorrido no painel lateral, notificação "pediu atendimento".
+- ✅ Textos editáveis (saudação, não entendeu, transferência com equipe online/offline, resolvido) e prévia. Seeder cria na Empresa Demo um chatbot completo (20 opções de menu de suporte de TI, financeiro e comercial + 8 perguntas frequentes).
+- ✅ 12 testes de backend (menu, FAQ, transferência, encerramento, opções inválidas, tomada pelo atendente, filtro, isolamento entre empresas, permissão, seeder de demonstração).
+- Custo zero por mensagem: tudo roda no próprio servidor. A estrutura (status `bot`, transferência, caminho) já serve para plugar uma IA depois, como reforço quando a FAQ não encontrar resposta.
 
 ### Problemas encontrados e corrigidos durante a validação
 - Job de broadcast perdia a relação `conversation` ao ser restaurado na fila sem contexto de empresa → corrigido + teste de regressão.

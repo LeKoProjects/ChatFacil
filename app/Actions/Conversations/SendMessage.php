@@ -18,6 +18,7 @@ use Illuminate\Validation\ValidationException;
  * - Idempotência: (conversation_id, client_message_id) único. Um reenvio do
  *   mesmo client_message_id retorna a mensagem já gravada, sem duplicar.
  * - O evento só é despachado após o commit (ShouldDispatchAfterCommit).
+ * - $meta guarda as opções clicáveis das mensagens do chatbot.
  */
 class SendMessage
 {
@@ -29,6 +30,7 @@ class SendMessage
         string $body,
         ?string $clientMessageId = null,
         ?User $agent = null,
+        ?array $meta = null,
     ): Message {
         $body = trim($body);
 
@@ -36,7 +38,7 @@ class SendMessage
             throw ValidationException::withMessages(['body' => 'A mensagem não pode ser vazia.']);
         }
 
-        return DB::transaction(function () use ($conversation, $sender, $body, $clientMessageId, $agent): Message {
+        return DB::transaction(function () use ($conversation, $sender, $body, $clientMessageId, $agent, $meta): Message {
             /** @var Conversation $locked */
             $locked = Conversation::query()->whereKey($conversation->getKey())->lockForUpdate()->firstOrFail();
 
@@ -68,6 +70,7 @@ class SendMessage
                 'user_id' => $sender === MessageSender::Agent ? $agent?->id : null,
                 'client_message_id' => $clientMessageId,
                 'body' => $body,
+                'meta' => $meta,
                 'delivered_at' => now(),
             ]);
 
@@ -78,6 +81,10 @@ class SendMessage
                 if ($locked->status === ConversationStatus::Pending) {
                     $updates['status'] = ConversationStatus::Open;
                 }
+            }
+
+            if ($sender === MessageSender::Bot) {
+                $updates['visitor_unread_count'] = $locked->visitor_unread_count + 1;
             }
 
             if ($sender === MessageSender::Agent) {

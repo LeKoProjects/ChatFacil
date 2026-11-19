@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { Building2, Globe, LayoutDashboard, LogOut, MessagesSquare, Moon, ScrollText, Sun, Users } from 'lucide-vue-next';
+import { Bot, Building2, Globe, LayoutDashboard, LogOut, MessagesSquare, Moon, ScrollText, Sun, Users } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import { toast, Toaster } from 'vue-sonner';
 import 'vue-sonner/style.css';
@@ -35,6 +35,7 @@ const nav = computed(() =>
               { href: '/inbox', label: 'Atendimento', icon: MessagesSquare, show: true },
               { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, show: isAdmin.value },
               { href: '/websites', label: 'Sites e widgets', icon: Globe, show: isAdmin.value },
+              { href: '/chatbot', label: 'Chatbot', icon: Bot, show: isAdmin.value },
               { href: '/agents', label: 'Atendentes', icon: Users, show: isAdmin.value },
           ],
 );

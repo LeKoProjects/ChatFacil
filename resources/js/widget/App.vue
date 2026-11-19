@@ -5,7 +5,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } 
 
 import NexoMark from '@/components/brand/NexoMark.vue';
 import { formatTime, uuid } from '@/lib/utils';
-import type { Message } from '@/types';
+import type { BotOption, Message } from '@/types';
 
 import { WidgetApi } from './api';
 import type { WidgetConfig, WidgetConversation } from './types';
@@ -31,6 +31,16 @@ const isClosed = computed(() => conversation.value?.status === 'closed');
 const showForm = computed(() => !conversation.value || (isClosed.value && startingNew.value));
 const startingNew = ref(false);
 const lastSeq = computed(() => messages.value.reduce((max, m) => Math.max(max, m.seq || 0), 0));
+const withBot = computed(() => conversation.value?.status === 'bot');
+const hasBotMessages = computed(() => messages.value.some((m) => m.sender_type === 'bot'));
+/** Só a última mensagem do bot mostra botões, e só enquanto a conversa está com ele. */
+const optionsMessageId = computed(() => {
+    if (!withBot.value) return null;
+    const last = [...messages.value].reverse().find((m) => m.sender_type !== 'system');
+    return last?.sender_type === 'bot' && last.options?.length ? last.id : null;
+});
+const choosing = ref(false);
+const chooseError = ref<string | null>(null);
 
 // ---------- Layout no site hospedeiro ----------
 function postLayout() {
@@ -80,7 +90,7 @@ function beep() {
 
 function onIncoming(m: Message) {
     merge([m]);
-    if (m.sender_type === 'agent') {
+    if (m.sender_type === 'agent' || m.sender_type === 'bot') {
         agentTyping.value = null;
         if (!open.value || document.hidden) {
             unread.value++;
@@ -168,7 +178,8 @@ async function deliver(m: Message) {
     m.failed = false;
     try {
         const res = await api.sendMessage(m.body, m.client_message_id!);
-        merge([res.message]);
+        merge([res.message, ...(res.replies ?? [])]);
+        scrollToBottom();
     } catch {
         m.pending = false;
         m.failed = true;
@@ -224,6 +235,23 @@ async function start() {
         formError.value = err.errors ? Object.values(err.errors)[0]?.[0] ?? err.message : err.message;
     } finally {
         sending.value = false;
+    }
+}
+
+async function choose(option: BotOption) {
+    if (choosing.value) return;
+    choosing.value = true;
+    chooseError.value = null;
+    try {
+        const data = await api.selectOption(option.id, uuid());
+        if (data.conversation) conversation.value = data.conversation;
+        merge(data.messages);
+        scrollToBottom();
+    } catch (e) {
+        chooseError.value = (e as Error).message;
+        recover();
+    } finally {
+        choosing.value = false;
     }
 }
 
@@ -297,7 +325,7 @@ onBeforeUnmount(() => {
                     <strong>{{ cfg.title }}</strong>
                     <span class="nx-status">
                         <i :class="cfg.online ? 'on' : 'off'" />
-                        {{ conversation?.agent ? `${conversation.agent} está atendendo` : cfg.online ? 'Online' : 'Offline — deixe sua mensagem' }}
+                        {{ conversation?.agent ? `${conversation.agent} está atendendo` : withBot ? 'Assistente virtual' : cfg.online ? 'Online' : 'Offline — deixe sua mensagem' }}
                     </span>
                 </div>
                 <button class="nx-icon" aria-label="Minimizar" @click="open = false">&#8211;</button>
@@ -319,12 +347,16 @@ onBeforeUnmount(() => {
 
             <template v-else>
                 <div ref="scroller" class="nx-messages" aria-live="polite">
-                    <p v-if="cfg.welcome_message" class="nx-bubble nx-them">{{ cfg.welcome_message }}</p>
+                    <p v-if="cfg.welcome_message && !hasBotMessages" class="nx-bubble nx-them">{{ cfg.welcome_message }}</p>
                     <template v-for="m in messages" :key="m.client_message_id ?? m.id">
                         <p v-if="m.sender_type === 'system'" class="nx-system">{{ m.body }}</p>
                         <div v-else :class="['nx-msg', m.sender_type === 'visitor' ? 'nx-me' : 'nx-them']">
-                            <span v-if="m.sender_type === 'agent'" class="nx-author">{{ m.author_name }}</span>
+                            <span v-if="m.sender_type === 'agent' || m.sender_type === 'bot'" class="nx-author">{{ m.author_name }}</span>
                             <p :class="['nx-bubble', m.pending && 'nx-pending']">{{ m.body }}</p>
+                            <div v-if="m.id === optionsMessageId" class="nx-options" role="group" aria-label="Opções">
+                                <button v-for="o in m.options" :key="o.id" type="button" class="nx-option" :disabled="choosing" @click="choose(o)">{{ o.label }}</button>
+                            </div>
+                            <p v-if="m.id === optionsMessageId && chooseError" class="nx-error">{{ chooseError }}</p>
                             <span class="nx-time">
                                 {{ formatTime(m.created_at) }}
                                 <button v-if="m.failed" class="nx-retry" @click="deliver(m)">não enviada — tentar de novo</button>
@@ -640,6 +672,34 @@ p.nx-bubble.nx-them {
     border: 1px solid #e6e8ef;
     border-bottom-left-radius: 4px;
     max-width: 80%;
+}
+.nx-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+.nx-option {
+    font: inherit;
+    font-size: 13px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--nx-primary);
+    background: #fff;
+    color: var(--nx-primary);
+    cursor: pointer;
+    text-align: left;
+    transition:
+        background 0.12s,
+        color 0.12s;
+}
+.nx-option:hover:not(:disabled) {
+    background: var(--nx-primary);
+    color: #fff;
+}
+.nx-option:disabled {
+    opacity: 0.5;
+    cursor: default;
 }
 .nx-pending {
     opacity: 0.65;

@@ -28,9 +28,11 @@ class MessageResource extends JsonResource
             'author_name' => match ($this->sender_type) {
                 MessageSender::Agent => $this->user?->name ?? 'Atendente',
                 MessageSender::System => 'Sistema',
+                MessageSender::Bot => 'Assistente virtual',
                 MessageSender::Visitor => $this->conversation->visitor->displayName(),
             },
             'body' => $this->body,
+            'options' => $this->meta['options'] ?? [],
             'client_message_id' => $this->client_message_id,
             'created_at' => $this->created_at->toIso8601String(),
             'read_at' => $this->read_at?->toIso8601String(),

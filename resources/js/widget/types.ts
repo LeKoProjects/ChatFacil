@@ -18,7 +18,7 @@ export interface WidgetConfig {
 
 export interface WidgetConversation {
     id: string;
-    status: 'waiting' | 'open' | 'pending' | 'closed';
+    status: 'bot' | 'waiting' | 'open' | 'pending' | 'closed';
     channel: string;
     agent: string | null;
     unread: number;
