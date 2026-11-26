@@ -108,13 +108,13 @@ Ele constrói as imagens (a primeira vez leva alguns minutos), sobe o banco, rod
 
 Teste localmente na EC2: `curl -I http://127.0.0.1:8090/up` deve responder `200`.
 
-Crie o administrador da NEXO (pede a senha sem mostrar, mínimo 12 caracteres):
+Crie os usuários iniciais com o seeder (administrador NEXO, empresas, atendentes e chatbot de demonstração):
 
 ```bash
-docker compose -f compose.prod.yaml exec app php artisan nexo:admin seu-email@nexoti.com.br --name="Seu Nome"
+docker compose -f compose.prod.yaml exec app php artisan db:seed --force
 ```
 
-> Não rode `db:seed` em produção. Ele cria usuários de demonstração com a senha `password` e, por isso, se recusa a rodar quando `APP_ENV=production`.
+> Todos os usuários do seeder têm a senha `password`. Troque as senhas logo no primeiro acesso.
 
 ## 7. Configurar o Apache
 

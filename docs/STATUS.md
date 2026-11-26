@@ -104,7 +104,7 @@ Legenda: ✅ feito e verificado · 🟡 parcial · ⬜ não iniciado
 - ✅ Imagens de produção: `prod` (PHP-FPM com código, dependências sem dev e front-end compilado; OPcache sem checagem de arquivos; caches do Laravel gerados ao iniciar) e `web` (Nginx com arquivos públicos).
 - ✅ `compose.prod.yaml`: app, web (só em `127.0.0.1:8090`), reverb, queue, postgres e redis com reinício automático, volumes persistentes e logs rotacionados; Postgres e Redis sem portas expostas.
 - ✅ `deploy/`: `setup-env.sh` (gera `.env` com chaves e senhas aleatórias), `deploy.sh` (pull, build, migrations, restart), `backup.sh` (pg_dump diário, 14 dias, cópia opcional para S3) e vhost do Apache com proxy de WebSocket.
-- ✅ `php artisan nexo:admin` para criar o administrador NEXO em produção; o seeder de demonstração se recusa a rodar com `APP_ENV=production`.
+- ✅ Usuários iniciais em produção pelo seeder normal (`php artisan db:seed --force`); senha `password`, a trocar no primeiro acesso.
 - ✅ Testado localmente em modo produção: login, painel, widget e tempo real pelo proxy (conversa nova chegou ao atendente em 267 ms; resposta ao visitante em 365 ms).
 - ⬜ Executar no servidor seguindo [DEPLOY-AWS.md](DEPLOY-AWS.md) (DNS, Docker, Apache, Certbot). A camada Apache/HTTPS só pode ser validada lá.
 

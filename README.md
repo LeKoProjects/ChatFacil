@@ -145,7 +145,7 @@ Imagem de produção (`Dockerfile`, alvos `prod` e `web`), `compose.prod.yaml` e
 ```bash
 ./deploy/setup-env.sh   # gera o .env com chaves e senhas aleatórias
 ./deploy/deploy.sh      # build, migrations e sobe tudo em 127.0.0.1:8090
-docker compose -f compose.prod.yaml exec app php artisan nexo:admin voce@empresa.com.br
+docker compose -f compose.prod.yaml exec app php artisan db:seed --force   # usuários iniciais (senha "password": troque no primeiro acesso)
 ```
 
 ## Instalar em sites WordPress

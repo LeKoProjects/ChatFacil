@@ -12,19 +12,15 @@ use App\Support\Tenancy\TenantContext;
 use Illuminate\Database\Seeder;
 
 /**
- * Dados de DEMONSTRAÇÃO para desenvolvimento local (não usar em produção).
- * Senha de todos os usuários: "password".
+ * Dados iniciais: administrador NEXO, duas empresas com admin, atendente,
+ * site/widget e o chatbot de demonstração. Pode rodar de novo sem duplicar.
+ * Senha de todos os usuários: "password" (troque após o primeiro acesso).
+ * Em produção: php artisan db:seed --force
  */
 class DatabaseSeeder extends Seeder
 {
     public function run(RegisterCompany $registerCompany, SaveWebsite $saveWebsite, TenantContext $tenant): void
     {
-        if (app()->isProduction()) {
-            $this->command?->error('O seeder cria dados de demonstração (senha "password") e não roda em produção. Use: php artisan nexo:admin');
-
-            return;
-        }
-
         User::query()->firstOrCreate(['email' => 'admin@nexo.local'], [
             'name' => 'Administração NEXO',
             'password' => 'password',
