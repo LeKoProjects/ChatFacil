@@ -15,12 +15,19 @@ use Illuminate\Database\Seeder;
  * Dados iniciais: administrador NEXO, duas empresas com admin, atendente,
  * site/widget e o chatbot de demonstração. Pode rodar de novo sem duplicar.
  * Senha de todos os usuários: "password" (troque após o primeiro acesso).
- * Em produção: php artisan db:seed --force
+ * Não roda em produção: lá as empresas e usuários são criados pelo painel
+ * /nexo, de acordo com cada cliente.
  */
 class DatabaseSeeder extends Seeder
 {
     public function run(RegisterCompany $registerCompany, SaveWebsite $saveWebsite, TenantContext $tenant): void
     {
+        if (app()->isProduction()) {
+            $this->command?->warn('Seeder ignorado em produção: crie empresas e usuários pelo painel /nexo.');
+
+            return;
+        }
+
         User::query()->firstOrCreate(['email' => 'admin@nexo.local'], [
             'name' => 'Administração NEXO',
             'password' => 'password',

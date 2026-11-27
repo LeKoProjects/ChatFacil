@@ -116,7 +116,7 @@ class BotEngine
             ->latest('id')
             ->first();
 
-        $option = collect($lastBotMessage->meta['options'] ?? [])->firstWhere('id', $optionId);
+        $option = collect($lastBotMessage?->meta['options'] ?? [])->firstWhere('id', $optionId);
 
         if (! $option) {
             throw ValidationException::withMessages(['option' => 'Esta opção não está mais disponível.']);
