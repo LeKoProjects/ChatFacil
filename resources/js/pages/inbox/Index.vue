@@ -18,6 +18,11 @@ import { api, HttpError } from '@/lib/http';
 import { cn, formatTime, relativeFrom, uuid } from '@/lib/utils';
 import type { AgentOption, ConversationSummary, Message, SharedProps } from '@/types';
 
+/** A página de origem vem do visitante: só vira link se for http(s). */
+function isWebUrl(url: string | null): boolean {
+    return !!url && /^https?:\/\//i.test(url);
+}
+
 const props = defineProps<{
     filter: string;
     search: string;
@@ -408,9 +413,10 @@ onBeforeUnmount(() => {
                     <div>
                         <dt class="text-xs text-muted-foreground">Página de origem</dt>
                         <dd>
-                            <a v-if="selected.origin_url" :href="selected.origin_url" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 break-all text-primary hover:underline">
+                            <a v-if="isWebUrl(selected.origin_url)" :href="selected.origin_url!" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 break-all text-primary hover:underline">
                                 {{ selected.origin_url }} <ExternalLink class="size-3 shrink-0" />
                             </a>
+                            <span v-else-if="selected.origin_url" class="break-all">{{ selected.origin_url }}</span>
                             <span v-else>—</span>
                         </dd>
                     </div>

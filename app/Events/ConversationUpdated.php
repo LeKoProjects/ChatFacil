@@ -14,7 +14,8 @@ use Illuminate\Queue\SerializesModels;
 
 /**
  * Mudança de estado da conversa (nova, atribuída, encerrada, reaberta).
- * Atualiza filas da central e o widget do visitante.
+ * Atualiza as filas da central (payload completo). O widget recebe
+ * VisitorConversationUpdated, só com o que o visitante precisa.
  */
 class ConversationUpdated implements ShouldBroadcast, ShouldDispatchAfterCommit
 {
@@ -26,7 +27,6 @@ class ConversationUpdated implements ShouldBroadcast, ShouldDispatchAfterCommit
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel($this->conversation->channelName()),
             new PrivateChannel('company.'.$this->conversation->company_id.'.inbox'),
         ];
     }

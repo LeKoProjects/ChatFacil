@@ -24,7 +24,7 @@ it('builds broadcast payloads after being restored by a queue worker without ten
     $channels = collect($restored->broadcastOn())->map->name->all();
     $payload = $restored->broadcastWith();
 
-    expect($channels)->toBe(["private-conversation.{$id}", "private-company.{$company->id}.inbox"])
+    expect($channels)->toBe(["private-company.{$company->id}.inbox"])
         ->and($payload['message']['body'])->toBe('mensagem enfileirada')
         ->and($payload['conversation']['id'])->toBe($id)
         ->and(app(TenantContext::class)->has())->toBeFalse();

@@ -20,10 +20,10 @@ Route::get('widget/frame/{publicKey}', WidgetFrameController::class)
     ->where('publicKey', 'wgt_[a-z0-9]{26}')
     ->name('widget.frame');
 
-// Página local para testar o widget (somente fora de produção)
-if (! app()->isProduction()) {
-    Route::view('widget/demo', 'widget.demo')->name('widget.demo');
-}
+// Página para testar o widget. Em produção, só para administradores logados.
+Route::view('widget/demo', 'widget.demo')
+    ->middleware(app()->isProduction() ? ['auth', 'role:platform_admin,company_admin'] : [])
+    ->name('widget.demo');
 
 // Painel central NEXO — exclusivo da administração do Grupo NEXO
 Route::middleware(['auth', 'role:platform_admin'])->prefix('nexo')->name('nexo.')->group(function () {

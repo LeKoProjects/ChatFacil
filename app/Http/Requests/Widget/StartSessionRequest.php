@@ -11,6 +11,19 @@ class StartSessionRequest extends FormRequest
         return true;
     }
 
+    /**
+     * A página de origem vem do navegador do visitante e aparece como link na
+     * central: só aceita http(s). Outro valor é descartado (não quebra o widget).
+     */
+    protected function prepareForValidation(): void
+    {
+        $page = $this->input('page_url');
+
+        if ($page !== null && (! is_string($page) || ! preg_match('#^https?://[^\s]+$#i', $page))) {
+            $this->merge(['page_url' => null]);
+        }
+    }
+
     /** @return array<string, mixed> */
     public function rules(): array
     {
