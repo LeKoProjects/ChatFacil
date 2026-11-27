@@ -35,7 +35,12 @@ class DatabaseSeeder extends Seeder
             'outra' => 'wgt_outra000000000000000000000',
         ];
 
-        foreach ([['Empresa Demo', 'demo'], ['Outra Empresa', 'outra']] as [$companyName, $slug]) {
+        // "Outra Empresa" só serve para testar o isolamento: não vai para produção.
+        $companies = app()->isProduction()
+            ? [['Empresa Demo', 'demo']]
+            : [['Empresa Demo', 'demo'], ['Outra Empresa', 'outra']];
+
+        foreach ($companies as [$companyName, $slug]) {
             if (User::where('email', "admin@{$slug}.local")->exists()) {
                 continue;
             }
